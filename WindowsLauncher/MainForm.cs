@@ -11,8 +11,9 @@ namespace TechnicLauncher
     public partial class Form1 : Form
     {
         public string LauncherURL = "https://raw.github.com/TechnicPack/Technic/master/";
-        private const string LauncherBackupFile = Program.LaucherFile + ".bak";
-        private const string LauncherTempFile = Program.LaucherFile + ".temp";
+        private readonly string _launcherFile = Path.Combine(Program.AppPath, Program.LaucherFile);
+        private readonly string _launcherBackupFile = Path.Combine(Program.AppPath, Program.LaucherFile + ".bak");
+        private readonly string _launcherTempFile = Path.Combine(Program.AppPath, Program.LaucherFile + ".temp");
         private int _hashDownloadCount, _launcherDownloadCount;
 
         public bool IsAddressible(Uri uri)
@@ -37,7 +38,7 @@ namespace TechnicLauncher
         {
             InitializeComponent();
 
-            if (File.Exists(Program.LaucherFile))
+            if (File.Exists(_launcherFile))
             {
                 DownloadHash();
             }
@@ -56,11 +57,11 @@ namespace TechnicLauncher
             if (_hashDownloadCount < 3 && IsAddressible(uri))
             {
                 _hashDownloadCount++;
-                versionCheck.DownloadStringAsync(uri, Program.LaucherFile);
+                versionCheck.DownloadStringAsync(uri, _launcherFile);
             }
             else
             {
-                Program.RunLauncher();
+                Program.RunLauncher(_launcherFile);
                 Close();
             }
         }
@@ -75,11 +76,11 @@ namespace TechnicLauncher
                 var wc = new WebClient();
                 wc.DownloadProgressChanged += DownloadProgressChanged;
                 wc.DownloadFileCompleted += DownloadFileCompleted;
-                wc.DownloadFileAsync(new Uri(String.Format("{0}technic-launcher.jar", LauncherURL)), LauncherTempFile);
+                wc.DownloadFileAsync(new Uri(String.Format("{0}technic-launcher.jar", LauncherURL)), _launcherTempFile);
             }
             else
             {
-                Program.RunLauncher();
+                Program.RunLauncher(_launcherFile);
                 Close();
             }
         }
@@ -94,12 +95,12 @@ namespace TechnicLauncher
             lblStatus.Text = @"Running Launcher..";
             pbStatus.Value = 100;
 
-            if (File.Exists(LauncherBackupFile))
-                File.Delete(LauncherBackupFile);
-            if (File.Exists(Program.LaucherFile))
-                File.Move(Program.LaucherFile, LauncherBackupFile);
-            File.Move(LauncherTempFile, Program.LaucherFile);
-            Program.RunLauncher();
+            if (File.Exists(_launcherBackupFile))
+                File.Delete(_launcherBackupFile);
+            if (File.Exists(_launcherFile))
+                File.Move(_launcherFile, _launcherBackupFile);
+            File.Move(_launcherTempFile, _launcherFile);
+            Program.RunLauncher(_launcherFile);
             Close();
         }
 
@@ -113,7 +114,7 @@ namespace TechnicLauncher
             MD5 hash = new MD5CryptoServiceProvider();
             String md5, serverMD5 = null;
             var sb = new StringBuilder();
-            using (var fs = File.Open(Program.LaucherFile, FileMode.Open, FileAccess.Read))
+            using (var fs = File.Open(_launcherFile, FileMode.Open, FileAccess.Read))
             {
                 var md5Bytes = hash.ComputeHash(fs);
                 foreach (byte hex in md5Bytes)
@@ -130,7 +131,7 @@ namespace TechnicLauncher
             }
 
             if (serverMD5 != null && serverMD5.Equals(md5)) {
-                Program.RunLauncher();
+                Program.RunLauncher(_launcherFile);
                 Close();
             }
             else
