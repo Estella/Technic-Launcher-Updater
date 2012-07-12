@@ -126,9 +126,9 @@ namespace TechnicLauncher
 
         public static void RunLauncher(String launcherPath)
         {
-            var java = //GetJavaInstallationPath() ?? 
-                //LocateJavaFromPath() ??
-                //LocateJavaPath() ??
+            var java = GetJavaInstallationPath() ?? 
+                LocateJavaFromPath() ??
+                LocateJavaPath() ??
                 LocateJavaFromProgramFiles();
             if (java == null)
             {

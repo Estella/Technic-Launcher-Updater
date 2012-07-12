@@ -10,11 +10,12 @@ namespace TechnicLauncher
 {
     public partial class Form1 : Form
     {
-        public string LauncherURL = "https://raw.github.com/TechnicPack/Technic/master/";
+        public string LauncherURL = "http://206.217.207.1/Technic/";
         private readonly string _launcherFile = Path.Combine(Program.AppPath, Program.LaucherFile);
         private readonly string _launcherBackupFile = Path.Combine(Program.AppPath, Program.LaucherFile + ".bak");
         private readonly string _launcherTempFile = Path.Combine(Program.AppPath, Program.LaucherFile + ".temp");
         private int _hashDownloadCount, _launcherDownloadCount;
+        private Exception error;
 
         public bool IsAddressible(Uri uri)
         {
@@ -80,6 +81,7 @@ namespace TechnicLauncher
             }
             else
             {
+                MessageBox.Show("Error", error.Message);
                 Program.RunLauncher(_launcherFile);
                 Close();
             }
@@ -89,6 +91,7 @@ namespace TechnicLauncher
         {
             if (e.Error != null)
             {
+                error = e.Error;
                 DownloadLauncher();
                 return;
             }
