@@ -115,14 +115,37 @@ namespace TechnicLauncher
                 return;
             }
             MD5 hash = new MD5CryptoServiceProvider();
-            String md5, serverMD5 = null;
+            String md5 = null, serverMD5 = null;
             var sb = new StringBuilder();
-            using (var fs = File.Open(_launcherFile, FileMode.Open, FileAccess.Read))
+
+            try
             {
-                var md5Bytes = hash.ComputeHash(fs);
-                foreach (byte hex in md5Bytes)
-                    sb.Append(hex.ToString("x2"));
-                md5 = sb.ToString().ToLowerInvariant();
+
+                using (var fs = File.Open(_launcherFile, FileMode.Open, FileAccess.Read))
+                {
+                    var md5Bytes = hash.ComputeHash(fs);
+                    foreach (byte hex in md5Bytes)
+                        sb.Append(hex.ToString("x2"));
+                    md5 = sb.ToString().ToLowerInvariant();
+                }
+            }
+            catch (IOException ioException)
+            {
+                Console.WriteLine(ioException.Message);
+                Console.WriteLine(ioException.StackTrace);
+
+                MessageBox.Show("Cannot check launcher version, the launcher is currently open!", "Launcher Currently Open", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                Application.Exit();
+                return;
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception.Message);
+                Console.WriteLine(exception.StackTrace);
+
+                MessageBox.Show("Error checking launcher version", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+                return;
             }
 
             var lines = e.Result.Split(new[] {"\r\n", "\n"}, StringSplitOptions.None);
