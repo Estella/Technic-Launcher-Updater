@@ -17,14 +17,17 @@ namespace TechnicLauncher
         private int _hashDownloadCount, _launcherDownloadCount;
         private Exception error;
 
-        public bool IsAddressible(Uri uri)
+        public delegate void IsAddressibleCallback(bool isAddressable, object userToken);
+
+        public bool IsAddressible(Uri uri, IsAddressibleCallback callback, object userToken)
         {
             try
             {
                 using (var client = new MyClient())
                 {
                     client.HeadOnly = true;
-                    client.DownloadString(uri);
+                    client.DownloadStringCompleted += new DownloadStringCompletedEventHandler(IsAddressibleHeadString);
+                    client.DownloadStringAsync(uri, new object[]{callback, userToken});
                     return true;
                 }
             }
@@ -35,27 +38,39 @@ namespace TechnicLauncher
             return false;
         }
 
+        void IsAddressibleHeadString(object sender, DownloadStringCompletedEventArgs e)
+        {
+            IsAddressibleCallback callback = (IsAddressibleCallback)((object[])e.UserState)[0];
+            bool isAddressible = true;
+            if (e.Error != null) isAddressible = false;
+
+            callback.Invoke(isAddressible, ((object[])e.UserState)[1]);
+        }
+
+
+
         public Form1()
         {
             InitializeComponent();
-
-            if (File.Exists(_launcherFile))
-            {
-                DownloadHash();
-            }
-            else
-            {
-                DownloadLauncher();
-            }
         }
 
         private void DownloadHash()
         {
-            lblStatus.Text = @"Checking Launcher Version..";
+            lblStatus.Text = @"Checking Launcher Version...";
+            pbStatus.Style = ProgressBarStyle.Marquee;
+            var uri = new Uri(String.Format("{0}CHECKSUM.md5", LauncherURL));
+
+            IsAddressible(uri, new IsAddressibleCallback(IsAddressibleResult), uri);
+        }
+
+        private void IsAddressibleResult(bool isAddressible, object uriObj)
+        {
+            Uri uri = (Uri)uriObj;
+
             var versionCheck = new WebClient();
             versionCheck.DownloadStringCompleted += DownloadStringCompleted;
-            var uri = new Uri(String.Format("{0}CHECKSUM.md5", LauncherURL));
-            if (_hashDownloadCount < 3 && IsAddressible(uri))
+
+            if (_hashDownloadCount < 3 && isAddressible)
             {
                 _hashDownloadCount++;
                 versionCheck.DownloadStringAsync(uri, _launcherFile);
@@ -70,7 +85,7 @@ namespace TechnicLauncher
         private void DownloadLauncher()
         {
             lblStatus.Text = String.Format(@"Downloading Launcher ({0}/{1})..", _launcherDownloadCount, 3);
-            
+            pbStatus.Style = ProgressBarStyle.Continuous;
             if (_launcherDownloadCount < 3)
             {
                 _launcherDownloadCount++;
@@ -170,6 +185,18 @@ namespace TechnicLauncher
         {
             lblStatus.Text = String.Format("Downloaded {0}% of launcher..", e.ProgressPercentage);
             pbStatus.Value = e.ProgressPercentage;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            if (File.Exists(_launcherFile))
+            {
+                DownloadHash();
+            }
+            else
+            {
+                DownloadLauncher();
+            }
         }
     }
 }

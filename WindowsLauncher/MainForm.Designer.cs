@@ -38,6 +38,7 @@
             this.pbStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pbStatus.Location = new System.Drawing.Point(12, 41);
+            this.pbStatus.MarqueeAnimationSpeed = 50;
             this.pbStatus.Name = "pbStatus";
             this.pbStatus.Size = new System.Drawing.Size(338, 23);
             this.pbStatus.TabIndex = 0;
@@ -61,6 +62,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "Technic Pack";
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
 
         }
