@@ -19,23 +19,14 @@ namespace TechnicLauncher
 
         public delegate void IsAddressibleCallback(bool isAddressable, object userToken);
 
-        public bool IsAddressible(Uri uri, IsAddressibleCallback callback, object userToken)
+        public void IsAddressible(Uri uri, IsAddressibleCallback callback, object userToken)
         {
-            try
+            using (var client = new MyClient())
             {
-                using (var client = new MyClient())
-                {
-                    client.HeadOnly = true;
-                    client.DownloadStringCompleted += new DownloadStringCompletedEventHandler(IsAddressibleHeadString);
-                    client.DownloadStringAsync(uri, new object[]{callback, userToken});
-                    return true;
-                }
+                client.HeadOnly = true;
+                client.DownloadStringCompleted += new DownloadStringCompletedEventHandler(IsAddressibleHeadString);
+                client.DownloadStringAsync(uri, new object[] { callback, userToken });
             }
-            catch (Exception loi)
-            {
-                
-            }
-            return false;
         }
 
         void IsAddressibleHeadString(object sender, DownloadStringCompletedEventArgs e)
