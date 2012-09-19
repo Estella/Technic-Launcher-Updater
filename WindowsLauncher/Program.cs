@@ -141,7 +141,7 @@ namespace TechnicLauncher
                                    CreateNoWindow = true,
                                    WorkingDirectory = Application.StartupPath,
                                    FileName = Path.Combine(java, "bin\\java.exe"),
-                                   Arguments = String.Format("-jar {0}", launcherPath),
+                                   Arguments = String.Format("-jar \"{0}\"", launcherPath),
                                    UseShellExecute = false
                                };
                 Process.Start(info);
