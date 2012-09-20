@@ -139,9 +139,9 @@ namespace TechnicLauncher
                 {
                     String commandLine = baseKey.GetValue("").ToString(); String home = "";
                     if (commandLine.IndexOf("javaw.exe") > -1)
-                        home = commandLine.Remove(commandLine.IndexOf("javaw.exe") - 1).Replace("\"", "");
+                        home = commandLine.Remove(commandLine.IndexOf(@"bin\javaw.exe") - 1).Replace("\"", "");
                     if (commandLine.IndexOf("java.exe") > -1)
-                        home = commandLine.Remove(commandLine.IndexOf("java.exe") - 1).Replace("\"", "");
+                        home = commandLine.Remove(commandLine.IndexOf(@"bin\java.exe") - 1).Replace("\"", "");
                     if (!home.Equals(""))
                     {
                         string javaPath = Path.Combine(home, @"bin\java.exe");
