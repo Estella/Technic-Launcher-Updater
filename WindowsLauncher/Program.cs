@@ -128,12 +128,39 @@ namespace TechnicLauncher
             return null;
         }
 
+        // Note that this will only ever be a 32-bit invocation as TechnicLauncherUpdater is itself
+        // 32-bit and reflection comes into play.
+        private static String GetJavaFileAssociationPath()
+        {
+            const string javaKey = @"jarfile\shell\open\command";
+            using (var baseKey = Registry.ClassesRoot.OpenSubKey(javaKey))
+            {
+                if (baseKey != null)
+                {
+                    String commandLine = baseKey.GetValue("").ToString(); String home = "";
+                    if (commandLine.IndexOf("javaw.exe") > -1)
+                        home = commandLine.Remove(commandLine.IndexOf("javaw.exe") - 1).Replace("\"", "");
+                    if (commandLine.IndexOf("java.exe") > -1)
+                        home = commandLine.Remove(commandLine.IndexOf("java.exe") - 1).Replace("\"", "");
+                    if (!home.Equals(""))
+                    {
+                        string javaPath = Path.Combine(home, @"bin\java.exe");
+                        if (File.Exists(javaPath))
+                            return home;
+                    }
+
+                }
+            }
+            return null;
+        }
+
         public static void RunLauncher(String launcherPath)
         {
             var java = GetJavaInstallationPath() ?? 
                 LocateJavaFromPath() ??
                 LocateJavaPath() ??
-                LocateJavaFromProgramFiles();
+                LocateJavaFromProgramFiles() ??
+                GetJavaFileAssociationPath();
             if (java == null || java.Equals(""))
             {
                 MessageBox.Show(@"Can't find java directory.");
