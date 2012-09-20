@@ -41,8 +41,12 @@ namespace TechnicLauncher
                     {
                         if (homeKey != null)
                         {
-                            var home = homeKey.GetValue("JavaHome");
-                            return home.ToString();
+                            String home = homeKey.GetValue("JavaHome").ToString();
+                            if (!home.Equals(""))   {       // Paranoia: JavaHome might exist and be empty.
+                                String javaPath=Path.Combine(home,@"bin\java.exe");
+                                if (File.Exists(javaPath))  // Paranoia: JavaHome might be set and set wrongly.
+                                    return home;
+                            }
                         }
                     }
                 }
@@ -130,7 +134,7 @@ namespace TechnicLauncher
                 LocateJavaFromPath() ??
                 LocateJavaPath() ??
                 LocateJavaFromProgramFiles();
-            if (java == null)
+            if (java == null || java.Equals(""))
             {
                 MessageBox.Show(@"Can't find java directory.");
             }
