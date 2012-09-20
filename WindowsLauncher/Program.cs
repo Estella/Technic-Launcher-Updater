@@ -163,7 +163,8 @@ namespace TechnicLauncher
                 GetJavaFileAssociationPath();
             if (java == null || java.Equals(""))
             {
-                MessageBox.Show(@"Can't find java directory.");
+                // May reduce badly-written forum posts.
+                MessageBox.Show("Can't find java directory. Go to http://java.com and download then reinstall Java.");
             }
             else
             {   
@@ -175,7 +176,15 @@ namespace TechnicLauncher
                                    Arguments = String.Format("-jar \"{0}\"", launcherPath),
                                    UseShellExecute = false
                                };
-                Process.Start(info);
+                try
+                {
+                    Process.Start(info);
+                }
+                catch (Exception e)
+                {
+                    // A rare exception and should never happen based on changes in the Paranoia commit.
+                    MessageBox.Show("Found Java, but couldn't start the launcher. Your Java installation is probably corrupt. Go to http://java.com and download then reinstall Java.\n\nAlso, the following exception was received:\n\n" + e.ToString());
+                }
             }
             Application.Exit();
         }
