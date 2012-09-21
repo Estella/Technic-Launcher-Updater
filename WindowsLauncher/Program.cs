@@ -9,7 +9,7 @@ namespace TechnicLauncher
 {
     static class Program
     {
-        public const string LaucherFile = "technic-launcher.jar";
+        public const string LauncherFile = "technic-launcher.jar";
         public static string AppPath;
 
         /// <summary>
