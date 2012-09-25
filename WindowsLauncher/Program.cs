@@ -46,15 +46,15 @@ namespace TechnicLauncher
             log.WriteLine(@"Contents of C:\Program Files\Java");
             foreach (string d in Directory.GetFileSystemEntries(@"C:\Program Files\Java"))
             {
-                log.WriteLine(d);
+                log.WriteLine("\t" + d);
             }
             log.WriteLine(@"Contents of C:\Program Files\Java (x86)");
             foreach (string d in Directory.GetFileSystemEntries(@"C:\Program Files (x86)\Java"))
             {
-                log.WriteLine(d);
+                log.WriteLine("\t" + d);
             }
 
-            log.WriteLine(@"HKLM\SOFTWARE\JavaSoft\Java Runtime Environment points to "+GetJavaInstallationPath());
+            log.WriteLine(@"Registry(32-bit only) points to "+GetJavaInstallationPath());
             String path=LocateJavaFromPath();
             if (path==null)
                 log.WriteLine("Java not found in user's PATH. (This is normal)");
