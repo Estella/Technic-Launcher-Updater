@@ -10,7 +10,9 @@ namespace TechnicLauncher
     static class Program
     {
         public const string LauncherFile = "technic-launcher.jar";
+        public static System.IO.StreamWriter log;
         public static string AppPath;
+        public static TextWriter logger;
 
         /// <summary>
         /// The main entry point for the application.
@@ -26,7 +28,139 @@ namespace TechnicLauncher
             if (!Directory.Exists(AppPath))
                 Directory.CreateDirectory(AppPath);
 
+            string LogPath = Path.Combine(AppPath, "logs");
+            if (!Directory.Exists(LogPath))
+                Directory.CreateDirectory(LogPath);
+            string LogFile = Path.Combine(LogPath, "launcher_init.log");
+            if (File.Exists(LogFile))
+                File.Delete(LogFile);
+            logger = File.AppendText(LogFile);
+            LogBasicSystemInfo(logger);
+
             Application.Run(new Form1());
+        }
+        private static void LogBasicSystemInfo(TextWriter log)
+        {
+            log.WriteLine("Technic Windows Launcher Starting up.");
+            log.WriteLine(getOSInfo());
+            log.WriteLine(@"Contents of C:\Program Files\Java");
+            foreach (string d in Directory.GetFileSystemEntries(@"C:\Program Files\Java"))
+            {
+                log.WriteLine(d);
+            }
+            log.WriteLine(@"Contents of C:\Program Files\Java (x86)");
+            foreach (string d in Directory.GetFileSystemEntries(@"C:\Program Files (x86)\Java"))
+            {
+                log.WriteLine(d);
+            }
+
+            log.WriteLine(@"HKLM\SOFTWARE\JavaSoft\Java Runtime Environment points to "+GetJavaInstallationPath());
+            String path=LocateJavaFromPath();
+            if (path==null)
+                log.WriteLine("Java not found in user's PATH. (This is normal)");
+            else
+                log.WriteLine("Java found in PATH at: "+path);
+
+            path=LocateJavaPath();
+            if (path==null)
+                log.WriteLine("JAVA_HOME is not set. (This is normal)");
+            else
+                log.WriteLine("JAVA_HOME points to "+path);
+
+            path = GetJavaFileAssociationPath();
+            if (path == null)
+                log.WriteLine(@"Jarfiles do not open with Java. User error.");
+            else
+                log.WriteLine(@"Jarfiles open with " + path);
+
+            path = LocateJavaFromProgramFiles();
+            if (path==null)
+                log.WriteLine(@"No Java found in C:\Program Files. User error.");
+            else
+                log.WriteLine(@"Found a Java by fast scan at: "+path);
+
+        }
+
+        private static int getOSArchitecture()
+        {
+            string pa = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
+            return ((String.IsNullOrEmpty(pa) || String.Compare(pa, 0, "x86", 0, 3, true) == 0) ? 32 : 64);
+        }
+        private static string getOSInfo()
+        {
+            //Get Operating system information.
+            OperatingSystem os = Environment.OSVersion;
+            //Get version information about the os.
+            Version vs = os.Version;
+
+            //Variable to hold our return value
+            string operatingSystem = "";
+
+            if (os.Platform == PlatformID.Win32Windows)
+            {
+                //This is a pre-NT version of Windows
+                switch (vs.Minor)
+                {
+                    case 0:
+                        operatingSystem = "95";
+                        break;
+                    case 10:
+                        if (vs.Revision.ToString() == "2222A")
+                            operatingSystem = "98SE";
+                        else
+                            operatingSystem = "98";
+                        break;
+                    case 90:
+                        operatingSystem = "Me";
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else if (os.Platform == PlatformID.Win32NT)
+            {
+                switch (vs.Major)
+                {
+                    case 3:
+                        operatingSystem = "NT 3.51";
+                        break;
+                    case 4:
+                        operatingSystem = "NT 4.0";
+                        break;
+                    case 5:
+                        if (vs.Minor == 0)
+                            operatingSystem = "2000";
+                        else
+                            operatingSystem = "XP";
+                        break;
+                    case 6:
+                        if (vs.Minor == 0)
+                            operatingSystem = "Vista";
+                        else
+                            operatingSystem = "7";
+                        break;
+                    default:
+                        break;
+                }
+            }
+            //Make sure we actually got something in our OS check
+            //We don't want to just return " Service Pack 2" or " 32-bit"
+            //That information is useless without the OS version.
+            if (operatingSystem != "")
+            {
+                //Got something.  Let's prepend "Windows" and get more info.
+                operatingSystem = "Windows " + operatingSystem;
+                //See if there's a service pack installed.
+                if (os.ServicePack != "")
+                {
+                    //Append it to the OS name.  i.e. "Windows XP Service Pack 3"
+                    operatingSystem += " " + os.ServicePack;
+                }
+                //Append the OS architecture.  i.e. "Windows XP Service Pack 3 32-bit"
+                operatingSystem += " " + getOSArchitecture().ToString() + "-bit";
+            }
+            //Return the information we've gathered.
+            return operatingSystem;
         }
 
         private static String GetJavaInstallationPath()
@@ -186,6 +320,8 @@ namespace TechnicLauncher
                     MessageBox.Show("Found Java, but couldn't start the launcher. Your Java installation is probably corrupt. Go to http://java.com and download then reinstall Java.\n\nAlso, the following exception was received:\n\n" + e.ToString());
                 }
             }
+            logger.Flush();
+            logger.Close();
             Application.Exit();
         }
 
