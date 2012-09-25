@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using System.Collections;
 
 namespace TechnicLauncher
 {
@@ -85,7 +86,7 @@ namespace TechnicLauncher
 
         private static int getOSArchitecture()
         {
-            string pa = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
+            string pa = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432");
             return ((String.IsNullOrEmpty(pa) || String.Compare(pa, 0, "x86", 0, 3, true) == 0) ? 32 : 64);
         }
         private static string getOSInfo()
@@ -231,34 +232,20 @@ namespace TechnicLauncher
             var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
 
             var path = Path.Combine(programFiles, "Java");
-            if (!Directory.Exists(path))
+            var pathNoX86 = path.Replace(" (x86)", "");
+            if (Directory.Exists(path)||Directory.Exists(pathNoX86))
             {
-                if (path.Contains("(x86)"))
+                var folders = new List<string>(Directory.GetDirectories(pathNoX86));
+                if (folders.Count <= 0)
+                    folders.AddRange(Directory.GetDirectories(path));
+                folders.Reverse();
+                foreach (var folder in folders)
                 {
-                    path = path.Replace(" (x86)", "");
-                    if (!Directory.Exists(path))
-                        return null;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            var folders = new List<string>(Directory.GetDirectories(path));
-            if (folders.Count <= 0)
-            {
-                path = path.Replace("Program Files", "Program Files (x86)");
-                if (!Directory.Exists(path))
-                    return null;
-                folders.AddRange(Directory.GetDirectories(path));
-            }
-            folders.Reverse();
-            foreach (var folder in folders)
-            {
-                var javaPath = Path.Combine(Path.Combine(folder, "bin"), "java.exe");
-                if (File.Exists(javaPath))
-                {
-                    return javaPath;
+                    var javaPath = Path.Combine(Path.Combine(folder, "bin"), "java.exe");
+                    if (File.Exists(javaPath))
+                    {
+                        return javaPath;
+                    }
                 }
             }
             return null;
@@ -325,19 +312,34 @@ namespace TechnicLauncher
         }
         public static void RunLauncher(String launcherPath)
         {
-            var java = GetJavaInstallationPath() ?? 
-                LocateJavaFromPath() ??
-                LocateJavaPath() ??
+            // First let JAVA_HOME override.
+            // Then go with whatever the registry says
+            // Then look for the most up-to-date one in program files
+            // Then look in user's PATH
+            // Then see if jarfiles are associated properly (32-bit only)
+            // Then scan the whole harddrive for Java (no guarantee of version or bitness)
+            var java = LocateJavaPath() ??
+                GetJavaInstallationPath() ??
                 LocateJavaFromProgramFiles() ??
+                LocateJavaFromPath() ??
                 GetJavaFileAssociationPath() ??
                 LocateJavaByExhaustiveSearch(@"C:\");
             if (java == null || java.Equals(""))
             {
                 // May reduce badly-written forum posts.
-                MessageBox.Show("Can't find java directory. Go to http://java.com and download then reinstall Java.");
+                String msg = "Could not find a Java interpreter. Please follow these steps to install one.\n\n" +
+                    "Go to http://java.com/download\n" +
+                    "Click on 'All Java Downloads' on the left side\n";
+                if (getOSArchitecture() == 64)
+                        msg+="Click on 'Windows Offline (64-bit)'\n";
+                else
+                        msg+="Click on 'Windows Offline (32-bit)'\n";
+                msg+="When that file finishes downloading, run it and allow it to install. Then restart this program.";
+
+                MessageBox.Show(msg,"Technic Launcher",MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
-            {   
+            {
                 var info = new ProcessStartInfo
                                {
                                    CreateNoWindow = true,
@@ -348,10 +350,12 @@ namespace TechnicLauncher
                                };
                 try
                 {
+                    logger.WriteLine(String.Format("Starting the Java launcher as \"{0}\" -jar \"{1}\"",java,launcherPath));
                     Process.Start(info);
                 }
                 catch (Exception e)
                 {
+                    logger.WriteLine(e.ToString());
                     // A rare exception and should never happen based on changes in the Paranoia commit.
                     MessageBox.Show("Found Java, but couldn't start the launcher. Your Java installation is probably corrupt. Go to http://java.com and download then reinstall Java.\n\nAlso, the following exception was received:\n\n" + e.ToString());
                 }
