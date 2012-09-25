@@ -57,7 +57,7 @@ namespace TechnicLauncher
                 log.WriteLine("\t" + d);
             }
 
-            log.WriteLine(@"Registry(32-bit only) points to "+GetJavaInstallationPath());
+            log.WriteLine(@"Registry points to "+GetJavaInstallationPath());
             String path=LocateJavaFromPath();
             if (path==null)
                 log.WriteLine("Java not found in user's PATH. (This is normal)");
@@ -86,7 +86,7 @@ namespace TechnicLauncher
 
         private static int getOSArchitecture()
         {
-            string pa = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432");
+            string pa = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
             return ((String.IsNullOrEmpty(pa) || String.Compare(pa, 0, "x86", 0, 3, true) == 0) ? 32 : 64);
         }
         private static string getOSInfo()
@@ -251,8 +251,6 @@ namespace TechnicLauncher
             return null;
         }
 
-        // Note that this will only ever be a 32-bit invocation as TechnicLauncherUpdater is itself
-        // 32-bit and reflection comes into play.
         private static String GetJavaFileAssociationPath()
         {
             const string javaKey = @"jarfile\shell\open\command";
@@ -314,9 +312,9 @@ namespace TechnicLauncher
         {
             // First let JAVA_HOME override.
             // Then go with whatever the registry says
-            // Then look for the most up-to-date one in program files
+            // Then look for the most up-to-date one in program files/program files(x86)
             // Then look in user's PATH
-            // Then see if jarfiles are associated properly (32-bit only)
+            // Then see if jarfiles are associated properly (probably 32-bit only)
             // Then scan the whole harddrive for Java (no guarantee of version or bitness)
             var java = LocateJavaPath() ??
                 GetJavaInstallationPath() ??
