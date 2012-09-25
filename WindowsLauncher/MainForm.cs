@@ -177,6 +177,12 @@ namespace TechnicLauncher
             lblStatus.Text = String.Format("Downloaded {0}% of launcher..", e.ProgressPercentage);
             pbStatus.Value = e.ProgressPercentage;
         }
+        public void NotifyStatus(String status)
+        {
+            lblStatus.Text = status;
+            lblStatus.Width = 8000;
+            pbStatus.Value = 100;
+        }
 
         private void Form1_Load(object sender, EventArgs e)
         {

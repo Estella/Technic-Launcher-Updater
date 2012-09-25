@@ -13,6 +13,7 @@ namespace TechnicLauncher
         public static System.IO.StreamWriter log;
         public static string AppPath;
         public static TextWriter logger;
+        static Form1 appForm;
 
         /// <summary>
         /// The main entry point for the application.
@@ -37,7 +38,8 @@ namespace TechnicLauncher
             logger = File.AppendText(LogFile);
             LogBasicSystemInfo(logger);
 
-            Application.Run(new Form1());
+            appForm = new Form1();
+            Application.Run(appForm);
         }
         private static void LogBasicSystemInfo(TextWriter log)
         {
@@ -179,7 +181,7 @@ namespace TechnicLauncher
                             if (!home.Equals(""))   {       // Paranoia: JavaHome might exist and be empty.
                                 String javaPath=Path.Combine(home,@"bin\java.exe");
                                 if (File.Exists(javaPath))  // Paranoia: JavaHome might be set and set wrongly.
-                                    return home;
+                                    return javaPath;
                             }
                         }
                     }
@@ -201,7 +203,7 @@ namespace TechnicLauncher
                 var javaPath = Path.Combine(folder, "java.exe");
                 if (File.Exists(javaPath))
                 {
-                    return folder;
+                    return javaPath;
                 }
             }
             return null;
@@ -218,7 +220,7 @@ namespace TechnicLauncher
                 var javaPath = Path.Combine(Path.Combine(folder, "bin"), "java.exe");
                 if (File.Exists(javaPath))
                 {
-                    return folder;
+                    return javaPath;
                 }
             }
             return null;
@@ -256,7 +258,7 @@ namespace TechnicLauncher
                 var javaPath = Path.Combine(Path.Combine(folder, "bin"), "java.exe");
                 if (File.Exists(javaPath))
                 {
-                    return folder;
+                    return javaPath;
                 }
             }
             return null;
@@ -271,16 +273,12 @@ namespace TechnicLauncher
             {
                 if (baseKey != null)
                 {
-                    String commandLine = baseKey.GetValue("").ToString(); String home = "";
-                    if (commandLine.IndexOf("javaw.exe") > -1)
-                        home = commandLine.Remove(commandLine.IndexOf(@"bin\javaw.exe") - 1).Replace("\"", "");
-                    if (commandLine.IndexOf("java.exe") > -1)
-                        home = commandLine.Remove(commandLine.IndexOf(@"bin\java.exe") - 1).Replace("\"", "");
-                    if (!home.Equals(""))
+                    String commandLine = baseKey.GetValue("").ToString(); String javaPath = "";
+                    javaPath = commandLine.Remove(commandLine.IndexOf(@".exe") + 4).Replace("\"", "");
+                    if (!javaPath.Equals(""))
                     {
-                        string javaPath = Path.Combine(home, @"bin\java.exe");
                         if (File.Exists(javaPath))
-                            return home;
+                            return javaPath;
                     }
 
                 }
@@ -288,13 +286,51 @@ namespace TechnicLauncher
             return null;
         }
 
+        private static String LocateJavaByExhaustiveSearch(String initialPath)
+        {
+            appForm.NotifyStatus("Searching for Java in " + initialPath);
+            Application.DoEvents();
+            try
+            {
+                string[] paths = Directory.GetDirectories(initialPath);
+                foreach (string d in paths)
+                {
+                    Console.WriteLine(d);
+                    try
+                    {
+                        string[] files = Directory.GetFiles(d, "java.exe");
+                        foreach (string f in files)
+                        {
+                            // Retrieve the first java.exe available.
+                            return f;
+                        }
+                    }
+                    // folder 'd' is not accessible. So continue to prevent trying to recurse.
+                    catch (Exception e)
+                    {
+                        continue;
+                    }
+
+                    // Recurse. Did we find anything?
+                    String ret = LocateJavaByExhaustiveSearch(d);
+                    if (ret != null)
+                        return ret;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            return null;    // If we get here, there's no Java on drive C:
+        }
         public static void RunLauncher(String launcherPath)
         {
             var java = GetJavaInstallationPath() ?? 
                 LocateJavaFromPath() ??
                 LocateJavaPath() ??
                 LocateJavaFromProgramFiles() ??
-                GetJavaFileAssociationPath();
+                GetJavaFileAssociationPath() ??
+                LocateJavaByExhaustiveSearch(@"C:\");
             if (java == null || java.Equals(""))
             {
                 // May reduce badly-written forum posts.
@@ -306,7 +342,7 @@ namespace TechnicLauncher
                                {
                                    CreateNoWindow = true,
                                    WorkingDirectory = Application.StartupPath,
-                                   FileName = Path.Combine(java, "bin\\java.exe"),
+                                   FileName = java,
                                    Arguments = String.Format("-jar \"{0}\"", launcherPath),
                                    UseShellExecute = false
                                };
