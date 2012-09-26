@@ -11,9 +11,9 @@ namespace TechnicLauncher
     public partial class Form1 : Form
     {
         public string LauncherURL = "http://206.217.207.1/Technic/";
-        private readonly string _launcherFile = Path.Combine(Program.AppPath, Program.LaucherFile);
-        private readonly string _launcherBackupFile = Path.Combine(Program.AppPath, Program.LaucherFile + ".bak");
-        private readonly string _launcherTempFile = Path.Combine(Program.AppPath, Program.LaucherFile + ".temp");
+        private readonly string _launcherFile = Path.Combine(Program.AppPath, Program.LauncherFile);
+        private readonly string _launcherBackupFile = Path.Combine(Program.AppPath, Program.LauncherFile + ".bak");
+        private readonly string _launcherTempFile = Path.Combine(Program.AppPath, Program.LauncherFile + ".temp");
         private int _hashDownloadCount, _launcherDownloadCount;
         private Exception error;
 
@@ -176,6 +176,12 @@ namespace TechnicLauncher
         {
             lblStatus.Text = String.Format("Downloaded {0}% of launcher..", e.ProgressPercentage);
             pbStatus.Value = e.ProgressPercentage;
+        }
+        public void NotifyStatus(String status)
+        {
+            lblStatus.Text = status;
+            lblStatus.Width = 8000;
+            pbStatus.Value = 100;
         }
 
         private void Form1_Load(object sender, EventArgs e)
