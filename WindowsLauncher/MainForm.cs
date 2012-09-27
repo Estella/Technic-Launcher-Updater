@@ -133,6 +133,12 @@ namespace TechnicLauncher
                     foreach (byte hex in md5Bytes)
                         sb.Append(hex.ToString("x2"));
                     md5 = sb.ToString().ToLowerInvariant();
+
+                    fs.Seek(0, SeekOrigin.Begin);
+                    Byte[] magic = new Byte[2];
+                    fs.Read(magic, 0, 2);
+                    if (magic[0] != 80 || magic[1] != 75)
+                        throw new ApplicationException();
                 }
             }
             catch (IOException ioException)
@@ -141,6 +147,12 @@ namespace TechnicLauncher
                 Console.WriteLine(ioException.StackTrace);
 
                 MessageBox.Show("Cannot check launcher version, the launcher is currently open!", "Launcher Currently Open", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                Application.Exit();
+                return;
+            }
+            catch (ApplicationException appException)
+            {
+                MessageBox.Show("Unable to download launcher. Please check your internet connection by opening www.techniclauncher.net in your webbrowser.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Application.Exit();
                 return;
             }
