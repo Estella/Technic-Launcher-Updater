@@ -25,32 +25,62 @@ namespace TechnicLauncher
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            AppPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            AppPath = Path.Combine(AppPath, ".techniclauncher");
-            if (!Directory.Exists(AppPath))
-                Directory.CreateDirectory(AppPath);
+            try
+            {
+                AppPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                if (!Directory.Exists(AppPath))
+                    Directory.CreateDirectory(AppPath);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Cannot load: " + AppPath, "Error Starting launcher");
+            }
+
+            var LauncherPath = Path.Combine(AppPath, ".techniclauncher");
+
+            try
+            {
+                if (!Directory.Exists(LauncherPath))
+                    Directory.CreateDirectory(LauncherPath);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Cannot load: " + LauncherPath, "Error Starting launcher");
+            }
 
             string LogPath = Path.Combine(AppPath, "logs");
-            if (!Directory.Exists(LogPath))
-                Directory.CreateDirectory(LogPath);
-            string LogFile = Path.Combine(LogPath, "launcher_init.log");
-            if (File.Exists(LogFile))
-                File.Delete(LogFile);
-            logger = File.AppendText(LogFile);
-            LogBasicSystemInfo(logger);
+            try
+            {
+                if (!Directory.Exists(LogPath))
+                    Directory.CreateDirectory(LogPath);
 
-            appForm = new Form1();
-            Application.Run(appForm);
+                string LogFile = Path.Combine(LogPath, "launcher_init.log");
+                if (File.Exists(LogFile))
+                    File.Delete(LogFile);
+                logger = File.AppendText(LogFile);
+                LogBasicSystemInfo(logger);
+
+                appForm = new Form1();
+                Application.Run(appForm);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Cannot load: " + LogPath, "Error Starting launcher");
+                MessageBox.Show(e.Message + "\n" + e.StackTrace, "Error Starting launcher");
+            }
         }
         private static void LogBasicSystemInfo(TextWriter log)
         {
-            log.WriteLine("Technic Windows Launcher Starting up.");
             log.WriteLine(getOSInfo());
-            log.WriteLine(@"Contents of C:\Program Files\Java");
-            foreach (string d in Directory.GetFileSystemEntries(@"C:\Program Files\Java"))
+            if (Directory.Exists(@"C:\Program Files\Java"))
             {
-                log.WriteLine("\t" + d);
+                log.WriteLine(@"Contents of C:\Program Files\Java");
+                foreach (string d in Directory.GetFileSystemEntries(@"C:\Program Files\Java"))
+                {
+                    log.WriteLine("\t" + d);
+                }
             }
+            log.Flush();
             if (Directory.Exists(@"C:\Program Files (x86)\Java"))
             {
                 log.WriteLine(@"Contents of C:\Program Files\Java (x86)");
@@ -59,31 +89,35 @@ namespace TechnicLauncher
                     log.WriteLine("\t" + d);
                 }
             }
+            log.Flush();
             log.WriteLine(@"Registry points to "+GetJavaInstallationPath());
             String path=LocateJavaFromPath();
             if (path==null)
                 log.WriteLine("Java not found in user's PATH. (This is normal)");
             else
-                log.WriteLine("Java found in PATH at: "+path);
+                log.WriteLine("Java found in PATH at: " + path);
+            log.Flush();
 
             path=LocateJavaPath();
             if (path==null)
                 log.WriteLine("JAVA_HOME is not set. (This is normal)");
             else
-                log.WriteLine("JAVA_HOME points to "+path);
+                log.WriteLine("JAVA_HOME points to " + path);
+            log.Flush();
 
             path = GetJavaFileAssociationPath();
             if (path == null)
                 log.WriteLine(@"Jarfiles do not open with Java. User error.");
             else
                 log.WriteLine(@"Jarfiles open with " + path);
+            log.Flush();
 
             path = LocateJavaFromProgramFiles();
             if (path==null)
                 log.WriteLine(@"No Java found in C:\Program Files. User error.");
             else
-                log.WriteLine(@"Found a Java by fast scan at: "+path);
-
+                log.WriteLine(@"Found a Java by fast scan at: " + path);
+            log.Flush();
         }
 
         private static int getOSArchitecture()
@@ -202,6 +236,8 @@ namespace TechnicLauncher
             foreach (var folder in folders)
             {
                 if (folder.ToLowerInvariant().Contains("system32"))
+                    continue;
+                if (Path.GetInvalidPathChars().Length > 0)
                     continue;
                 var javaPath = Path.Combine(folder, "java.exe");
                 if (File.Exists(javaPath))
