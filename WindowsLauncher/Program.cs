@@ -51,12 +51,14 @@ namespace TechnicLauncher
             {
                 log.WriteLine("\t" + d);
             }
-            log.WriteLine(@"Contents of C:\Program Files\Java (x86)");
-            foreach (string d in Directory.GetFileSystemEntries(@"C:\Program Files (x86)\Java"))
+            if (Directory.Exists(@"C:\Program Files (x86)\Java"))
             {
-                log.WriteLine("\t" + d);
+                log.WriteLine(@"Contents of C:\Program Files\Java (x86)");
+                foreach (string d in Directory.GetFileSystemEntries(@"C:\Program Files (x86)\Java"))
+                {
+                    log.WriteLine("\t" + d);
+                }
             }
-
             log.WriteLine(@"Registry points to "+GetJavaInstallationPath());
             String path=LocateJavaFromPath();
             if (path==null)
