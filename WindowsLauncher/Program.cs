@@ -205,24 +205,29 @@ namespace TechnicLauncher
         private static String GetJavaInstallationPath()
         {
             const string javaKey = "SOFTWARE\\JavaSoft\\Java Runtime Environment";
-            using (var baseKey = Registry.LocalMachine.OpenSubKey(javaKey))
+            try
             {
-                if (baseKey != null)
+                using (var baseKey = Registry.LocalMachine.OpenSubKey(javaKey))
                 {
-                    String currentVersion = baseKey.GetValue("CurrentVersion").ToString();
-                    using (var homeKey = baseKey.OpenSubKey(currentVersion))
+                    if (baseKey != null)
                     {
-                        if (homeKey != null)
+                        String currentVersion = baseKey.GetValue("CurrentVersion").ToString();
+                        using (var homeKey = baseKey.OpenSubKey(currentVersion))
                         {
-                            String home = homeKey.GetValue("JavaHome").ToString();
-                            if (!home.Equals(""))   {       // Paranoia: JavaHome might exist and be empty.
-                                String javaPath=Path.Combine(home,@"bin\java.exe");
-                                if (File.Exists(javaPath))  // Paranoia: JavaHome might be set and set wrongly.
-                                    return javaPath;
+                            if (homeKey != null)
+                            {
+                                String home = homeKey.GetValue("JavaHome").ToString();
+                                if (!home.Equals(""))
+                                {       // Paranoia: JavaHome might exist and be empty.
+                                    String javaPath = Path.Combine(home, @"bin\java.exe");
+                                    if (File.Exists(javaPath))  // Paranoia: JavaHome might be set and set wrongly.
+                                        return javaPath;
+                                }
                             }
                         }
                     }
                 }
+            } catch (Exception) {
             }
             return null;
         }
