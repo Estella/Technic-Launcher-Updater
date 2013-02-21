@@ -152,7 +152,7 @@ namespace TechnicLauncher
             }
             catch (ApplicationException appException)
             {
-                MessageBox.Show("Unable to download launcher. Please check your internet connection by opening www.techniclauncher.net in your webbrowser.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Unable to download launcher. Please check your internet connection by opening www.technicpack.net in your webbrowser.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Application.Exit();
                 return;
             }
